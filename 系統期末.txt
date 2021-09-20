@@ -1,0 +1,55 @@
+COPY       START       0
+FIRST      STL         RETADR
+           LDB         #LENGTH
+           BASE        LENGTH
+ALOOP      +JSUB       RDREC
+           LDA         LENGTH
+           COMP        #0
+           JEQ         ENDFIL
+           +JSUB       WRREC
+           J           ALOOP
+ENDFIL     LDA         =C'EOF'
+           STA         BUFFER
+           LDA         #3
+           STA         LENGTH
+           +JSUB       WRREC
+           J           @RETADR
+           LTORG
+RETADR     RESW        1
+LENGTH     RESW        1
+BUFFER     RESB        4126
+BUFEND     EQU         *
+MAXLN      EQU         BUFEND-BUFFER
+.
+.   SUBROUTINE RDREC
+.
+RDREC      CLEAR       X
+           CLEAR       A
+           LDS         #99
+           CLEAR       S
+           +LDT        #MAXLN
+ELOOP      TD          INPUT
+           JEQ         ELOOP
+           RD          INPUT
+           COMPR       A,S
+           JEQ         EXIT
+           STCH        BUFFER,X
+           TIXR        T
+           JLT         ELOOP
+EXIT       STX         LENGTH
+           RSUB
+INPUT      BYTE        X'F1'
+.
+.   SUBROUTINE WRREC
+.
+WRREC      CLEAR       X
+           LDT         Length
+DLOOP      TD          =X'05'
+           JEQ         DLOOP
+           LDCH        buffer,X
+           WD          =X'05'
+           TIXR        T
+           JLT         dloop
+REF        LDA         dLOOP+21
+           RSUB
+           END         FIRST
